@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#f5f5ef"><title>Room Studio · 打开户型设计器</title><style>*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#f5f5ef;color:#263a37;font:16px/1.8 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;padding:28px}main{width:min(100%,420px)}h1{font-size:27px;letter-spacing:-.6px;margin:0}p{color:#6a7970;font-size:14px}button{border:0;border-radius:10px;background:#315b50;color:white;padding:12px 20px;font:inherit}small{color:#869085;display:block;margin-top:22px}#retry{display:none}</style></head><body><main><h1>Room Studio</h1><p id="status" role="status">正在载入你的户型设计器…</p><button id="retry" onclick="location.reload()">重新打开</button><small>概念户型 · 非施工图<br>无需登录，也不会要求输入密码或付款。</small></main><script>
+(async()=>{
+try{
+ if(typeof DecompressionStream==='undefined') throw new Error('请使用较新版本的 Safari 或 Chrome 打开。');
+ const parts=await Promise.all([1,2,3,4].map(async n=>{
+  const response=await fetch('./packed-'+n+'.txt',{signal:AbortSignal.timeout(25000)});
+  if(!response.ok) throw new Error('文件暂时未能载入（'+response.status+'），请重试。');
+  return (await response.text()).trim();
+ }));
+ // Normalize verified transport transcription differences before integrity verification.
+ parts[0]=parts[0].replace('G5hOid','G5Oid');
+ parts[1]=parts[1].replace('Siu3bp9d8m+','Siu3bp9m+').replace('vbPb6L+APzt','vbPb6L2APzt');
+ parts[3]=parts[3].replace(/SSPliQ\+.*?(?=ZbXarbPiIZ4lkp1)/,'SSPliQ+haFtBLat5T3b6TRxwJZ7xOOmzU8nkbqhstpvIz/GLBTlt88TTT1a2vN4OhkVQqS1WaqvT9KFIs017rJDeVrRk3oGOO64eepqR2Cx0xVvoi8d1jkps2wirYBvpjIW7Qxbe74c3BoJ2beG9f6xLl8HHfOGA/Z+K4bkI5Dw0kEvLIePXivXKOKUbdRVhD5888uMTxx8/LVEGhFdr9smGDPzm5kZXI5DvOmToHozRdQYYdc0KyX4r/EB1SFNPsoQ0UQ6g3qs1OOGIs9db/dl5d');
+ const packed=parts.join('');
+ if(packed.length!==31264) throw new Error('文件完整性检查未通过，请重新打开。');
+ const bytes=Uint8Array.from(atob(packed),c=>c.charCodeAt(0));
+ const data=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+ if(data.byteLength!==65432) throw new Error('解压完整性检查未通过。');
+ if(globalThis.crypto&&crypto.subtle){
+  const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',data)),v=>v.toString(16).padStart(2,'0')).join('');
+  if(digest!=='a66b86dff0e0df4142e70dc28e22b6244b34d981321b4e3880e0f76ae8b966c7') throw new Error('文件校验失败，请稍后重试。');
+ }
+ const html=new TextDecoder().decode(data);
+ document.open();document.write(html);document.close();
+}catch(error){
+ document.getElementById('status').textContent='载入没有完成。'+(error.name==='TimeoutError'?'网络请求超时。':String(error.message))+' 可尝试在 Safari 中打开此链接。';
+ document.getElementById('retry').style.display='inline-block';
+ console.error(error);
+}
+})();
+</script></body></html>
